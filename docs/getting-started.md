@@ -52,7 +52,7 @@ docker compose up -d
 
 | Setting | Purpose |
 |---------|---------|
-| `image` | The LuxUPT Docker image from Docker Hub |
+| `image` | The LuxUPT Docker image from GHCR |
 | `container_name` | Name for your container (used in commands like `docker logs luxupt`) |
 | `restart: always` | Automatically restart if the container stops or system reboots |
 | `ports` | Maps port 8080 inside the container to your host |

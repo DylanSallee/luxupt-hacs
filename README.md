@@ -99,7 +99,7 @@ Released by [Luxardo Labs](https://www.luxardolabs.com/) as a contribution to th
 No cloud services. No data collection. No subscriptions. Just software that runs on your hardware.
 
 - [GitHub](https://github.com/luxardolabs/luxupt)
-- [Docker Hub](https://hub.docker.com/r/luxardolabs/luxupt)
+- [GHCR](https://ghcr.io/luxardolabs/luxupt)
 - Contact: info@luxardolabs.com
 
 Found a bug? Have a feature idea? [Open an issue](https://github.com/luxardolabs/luxupt/issues). Pull requests welcome.
