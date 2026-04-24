@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # Source bashio library
 source /usr/lib/bashio/bashio
