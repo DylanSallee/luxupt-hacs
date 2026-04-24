@@ -423,15 +423,19 @@ class JobProcessor:
                 if camera_obj:
                     camera_name = camera_obj.name
             
+            # Calculate relative path for Home Assistant Media Browser
+            ha_relative_path = str(output_path.relative_to(config.VIDEO_OUTPUT_PATH))
+            
             await self._fire_ha_event(
                 camera=camera,
                 camera_name=camera_name,
                 date_str=date_obj.strftime("%Y-%m-%d"),
                 file_path=str(output_path),
+                ha_relative_path=ha_relative_path,
                 interval=interval
             )
 
-    async def _fire_ha_event(self, camera: str, camera_name: str, date_str: str, file_path: str, interval: int) -> None:
+    async def _fire_ha_event(self, camera: str, camera_name: str, date_str: str, file_path: str, ha_relative_path: str, interval: int) -> None:
         """Fire an event in Home Assistant if running as an Add-on."""
         supervisor_token = os.environ.get("SUPERVISOR_TOKEN")
         if not supervisor_token:
@@ -449,6 +453,7 @@ class JobProcessor:
             "camera_safe_name": camera,
             "date": date_str,
             "file_path": file_path,
+            "ha_relative_path": ha_relative_path,
             "interval": interval
         }
         try:
