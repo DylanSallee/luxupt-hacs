@@ -132,7 +132,7 @@ async def init_db() -> None:
 
     from db.base import Base
 
-    DATABASE_DIR.mkdir(parents=True, exist_ok=True)
+    DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
 
     try:
         async with engine.begin() as conn:
