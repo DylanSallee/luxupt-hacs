@@ -1,4 +1,7 @@
-#!/usr/bin/env bashio
+#!/usr/bin/env bash
+
+# Source bashio library
+source /usr/lib/bashio/bashio
 
 bashio::log.info "Starting LuxUPT Add-on..."
 
