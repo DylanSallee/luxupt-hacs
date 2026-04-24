@@ -16,7 +16,7 @@ from sqlalchemy.pool import AsyncAdaptedQueuePool
 # Database path - separate from output to allow local SSD for DB, NFS for images
 OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", "output"))
 DATABASE_DIR = Path(os.getenv("DATABASE_DIR", str(OUTPUT_DIR)))
-DATABASE_PATH = DATABASE_DIR / "timelapse.db"
+DATABASE_PATH = Path(os.getenv("SQLITE_DB_PATH", str(DATABASE_DIR / "timelapse.db")))
 DATABASE_URL = f"sqlite+aiosqlite:///{DATABASE_PATH}"
 
 # Create async engine with SQLite-specific settings
