@@ -549,7 +549,7 @@ If you can't resolve an issue:
    - Error messages from logs
    - Steps to reproduce
 
-3. **Open an issue:** [GitHub Issues](https://github.com/luxardolabs/luxupt/issues)
+3. **Open an issue:** [GitHub Issues](https://github.com/DylanSallee/luxupt-hacs/issues)
 
 ---
 

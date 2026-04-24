@@ -31,7 +31,7 @@ Create a `compose.yaml` file:
 ```yaml
 services:
   luxupt:
-    image: ghcr.io/luxardolabs/luxupt:latest
+    image: ghcr.io/DylanSallee/luxupt-hacs:latest
     container_name: luxupt
     restart: always
     ports:

@@ -31,7 +31,7 @@ Log in to UniFi Protect → Settings → Control Plane → Integrations → Your
 ```yaml
 services:
   luxupt:
-    image: ghcr.io/luxardolabs/luxupt:latest
+    image: ghcr.io/DylanSallee/luxupt-hacs:latest
     container_name: luxupt
     restart: always
     ports:
@@ -101,11 +101,11 @@ Released by [Luxardo Labs](https://www.luxardolabs.com/) as a contribution to th
 
 No cloud services. No data collection. No subscriptions. Just software that runs on your hardware.
 
-- [GitHub](https://github.com/luxardolabs/luxupt)
-- [GHCR](https://ghcr.io/luxardolabs/luxupt)
+- [GitHub](https://github.com/DylanSallee/luxupt-hacs)
+- [GHCR](https://ghcr.io/DylanSallee/luxupt-hacs)
 - Contact: info@luxardolabs.com
 
-Found a bug? Have a feature idea? [Open an issue](https://github.com/luxardolabs/luxupt/issues). Pull requests welcome.
+Found a bug? Have a feature idea? [Open an issue](https://github.com/DylanSallee/luxupt-hacs/issues). Pull requests welcome.
 
 ---
 

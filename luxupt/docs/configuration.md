@@ -9,7 +9,7 @@ The minimal compose file:
 ```yaml
 services:
   luxupt:
-    image: ghcr.io/luxardolabs/luxupt:latest
+    image: ghcr.io/DylanSallee/luxupt-hacs:latest
     container_name: luxupt
     restart: always
     ports:
@@ -30,7 +30,7 @@ services:
 ```yaml
 services:
   luxupt:
-    image: ghcr.io/luxardolabs/luxupt:latest
+    image: ghcr.io/DylanSallee/luxupt-hacs:latest
     container_name: luxupt
     restart: always
     ports:
@@ -124,7 +124,7 @@ If you have more than one UniFi Protect system (e.g., home and office), run sepa
 ```yaml
 services:
   luxupt-home:
-    image: ghcr.io/luxardolabs/luxupt:latest
+    image: ghcr.io/DylanSallee/luxupt-hacs:latest
     container_name: luxupt-home
     restart: always
     ports:
@@ -141,7 +141,7 @@ services:
       UNIFI_PROTECT_VERIFY_SSL: "false"
 
   luxupt-office:
-    image: ghcr.io/luxardolabs/luxupt:latest
+    image: ghcr.io/DylanSallee/luxupt-hacs:latest
     container_name: luxupt-office
     restart: always
     ports:
@@ -222,7 +222,7 @@ server {
 # docker-compose with Traefik labels
 services:
   luxupt:
-    image: ghcr.io/luxardolabs/luxupt:latest
+    image: ghcr.io/DylanSallee/luxupt-hacs:latest
     container_name: luxupt
     restart: always
     volumes:
@@ -333,7 +333,7 @@ NVMe (fast, ephemeral)              HDD/NAS (bulk, archival)
 ```yaml
 services:
   luxupt:
-    image: ghcr.io/luxardolabs/luxupt:latest
+    image: ghcr.io/DylanSallee/luxupt-hacs:latest
     container_name: luxupt
     restart: always
     ports:
@@ -351,7 +351,7 @@ Each storage path is configured via environment variables and mapped to its own 
 ```yaml
 services:
   luxupt:
-    image: ghcr.io/luxardolabs/luxupt:latest
+    image: ghcr.io/DylanSallee/luxupt-hacs:latest
     container_name: luxupt
     restart: always
     ports:

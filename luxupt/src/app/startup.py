@@ -39,7 +39,7 @@ def print_banner() -> None:
             "version": version,
             "build_date": build_date,
             "author": "Dave Schmid (lux4rd0)",
-            "repository": "https://github.com/luxardolabs/luxupt",
+            "repository": "https://github.com/DylanSallee/luxupt-hacs",
         },
     )
 
