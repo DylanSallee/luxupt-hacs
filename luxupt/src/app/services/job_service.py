@@ -422,8 +422,10 @@ class JobProcessor:
         """Fire an event in Home Assistant if running as an Add-on."""
         supervisor_token = os.environ.get("SUPERVISOR_TOKEN")
         if not supervisor_token:
+            logger.debug("SUPERVISOR_TOKEN not found, skipping Home Assistant event firing")
             return
             
+        # Use the supervisor proxy for the Home Assistant Core API
         url = "http://supervisor/core/api/events/luxupt_timelapse_completed"
         headers = {
             "Authorization": f"Bearer {supervisor_token}",
@@ -439,10 +441,19 @@ class JobProcessor:
             import httpx
             async with httpx.AsyncClient() as client:
                 response = await client.post(url, headers=headers, json=payload, timeout=5.0)
-                response.raise_for_status()
-                logger.info("Fired Home Assistant event luxupt_timelapse_completed", extra={"camera": camera})
+                if response.status_code >= 400:
+                    logger.warning(
+                        "Home Assistant event firing failed", 
+                        extra={
+                            "status_code": response.status_code, 
+                            "response": response.text,
+                            "camera": camera
+                        }
+                    )
+                else:
+                    logger.info("Fired Home Assistant event luxupt_timelapse_completed", extra={"camera": camera})
         except Exception as e:
-            logger.warning("Failed to fire Home Assistant event", extra={"error": str(e)})
+            logger.warning("Exception while firing Home Assistant event", extra={"error": str(e)})
 
     async def _probe_video_metadata(
         self, output_path: config.Path, frame_rate: int, probe_timeout: int
