@@ -259,6 +259,51 @@ def get_current_user(request: Request) -> str:
     return username
 
 
+async def get_api_user(request: Request) -> str:
+    """Get authenticated user for API endpoints (supports Basic Auth and Bearer token)."""
+    auth_header = request.headers.get("Authorization")
+    
+    # Check for token cookie first (if using UI)
+    token = request.cookies.get(COOKIE_NAME)
+    if token:
+        username = AuthService.verify_token(token)
+        if username:
+            return username
+
+    if not auth_header:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+        
+    scheme, _, credentials = auth_header.partition(" ")
+    
+    if scheme.lower() == "bearer":
+        username = AuthService.verify_token(credentials)
+        if username:
+            return username
+            
+    elif scheme.lower() == "basic":
+        import base64
+        try:
+            decoded = base64.b64decode(credentials).decode("utf-8")
+            username, _, password = decoded.partition(":")
+            
+            async with async_session() as db:
+                success, _ = await AuthService.authenticate_user(db, username, password)
+                if success:
+                    return username
+        except Exception:
+            pass
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid authentication credentials",
+        headers={"WWW-Authenticate": "Basic"},
+    )
+
+
 async def login_form(request: Request) -> Response:
     """Display login form, or redirect to setup if no users exist."""
     # Check if setup is needed - redirect to /setup if so

@@ -414,6 +414,36 @@ class JobProcessor:
             extra={"camera": camera, "date": date_obj.strftime("%Y-%m-%d"), "interval": interval},
         )
 
+        # Fire Home Assistant event
+        if output_exists:
+            await self._fire_ha_event(camera, date_obj.strftime("%Y-%m-%d"), str(output_path), interval)
+
+    async def _fire_ha_event(self, camera: str, date_str: str, file_path: str, interval: int) -> None:
+        """Fire an event in Home Assistant if running as an Add-on."""
+        supervisor_token = os.environ.get("SUPERVISOR_TOKEN")
+        if not supervisor_token:
+            return
+            
+        url = "http://supervisor/core/api/events/luxupt_timelapse_completed"
+        headers = {
+            "Authorization": f"Bearer {supervisor_token}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "camera": camera,
+            "date": date_str,
+            "file_path": file_path,
+            "interval": interval
+        }
+        try:
+            import httpx
+            async with httpx.AsyncClient() as client:
+                response = await client.post(url, headers=headers, json=payload, timeout=5.0)
+                response.raise_for_status()
+                logger.info("Fired Home Assistant event luxupt_timelapse_completed", extra={"camera": camera})
+        except Exception as e:
+            logger.warning("Failed to fire Home Assistant event", extra={"error": str(e)})
+
     async def _probe_video_metadata(
         self, output_path: config.Path, frame_rate: int, probe_timeout: int
     ) -> tuple[float, str | None, int]:

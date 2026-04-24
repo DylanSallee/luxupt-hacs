@@ -341,6 +341,14 @@ def create_app() -> FastAPI:
         )
 
     # Add middleware (order matters - first added = outermost = runs first on request, last on response)
+    @app.middleware("http")
+    async def ingress_middleware(request: Request, call_next: Any) -> Response:
+        """Handle Home Assistant Ingress base path dynamically."""
+        ingress_path = request.headers.get("X-Ingress-Path")
+        if ingress_path:
+            request.scope["root_path"] = ingress_path
+        return await call_next(request)
+
     # CORS must be outermost to handle preflight requests
     app.add_middleware(
         CORSMiddleware,
@@ -388,6 +396,7 @@ def create_app() -> FastAPI:
 
     # Import and include HTMX routers (SQLite + view services architecture)
     from .routers import (
+        api_router,
         cameras_router,
         images_router,
         pages_router,
@@ -405,6 +414,9 @@ def create_app() -> FastAPI:
     app.include_router(images_router, prefix="/images", tags=["images"])
     app.include_router(timelapses_router, prefix="/timelapses", tags=["timelapses"])
     app.include_router(system_router, prefix="/system", tags=["system"])
+    
+    # API router for external integrations
+    app.include_router(api_router.router, prefix="/api/v1", tags=["api"])
 
     # Root redirect
     @app.get("/", response_class=HTMLResponse)

@@ -129,8 +129,8 @@ class AuthRedirectMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         """Check authentication and redirect to login or setup if needed."""
-        # Check if this is a public path or static file
-        if any(request.url.path.startswith(path) for path in self.PUBLIC_PATHS):
+        # Check if this is a public path or static file, or an API route (which handles its own auth)
+        if any(request.url.path.startswith(path) for path in self.PUBLIC_PATHS) or request.url.path.startswith("/api/"):
             return await call_next(request)
 
         # Check authentication

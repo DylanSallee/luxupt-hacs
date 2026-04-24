@@ -10,6 +10,11 @@ arch:
 init: false
 startup: application
 
+ingress: true
+ingress_port: 8080
+panel_icon: mdi:camera-timer
+panel_title: "LuxUPT"
+
 map:
   - share:rw
 
