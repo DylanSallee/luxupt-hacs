@@ -30,16 +30,21 @@ class TimelapsesViewService:
         self.job_service = job_service
         self.settings_service = settings_service
 
-    async def get_camera_info(self, camera_id: str) -> dict | None:
-        """Look up camera by ID to get safe_name and other info.
+    async def get_camera_info(self, identifier: str) -> dict | None:
+        """Look up camera by ID or safe_name to get info.
 
         Args:
-            camera_id: The camera UUID
+            identifier: The camera UUID or safe_name
 
         Returns:
             Dict with camera_id, safe_name, name or None if not found
         """
-        camera = await self.camera_service.get_by_id(camera_id)
+        camera = await self.camera_service.get_by_id(identifier)
+        if not camera:
+            camera = await self.camera_service.get_by_safe_name(identifier)
+        if not camera:
+            camera = await self.camera_service.get_by_name(identifier)
+
         if not camera:
             return None
         return {

@@ -23,6 +23,10 @@ class CameraService:
         """Get a camera by its UniFi camera ID."""
         return await camera_crud.get_by_camera_id(self.db, camera_id)
 
+    async def get_by_name(self, name: str) -> Camera | None:
+        """Get a camera by its display name."""
+        return await camera_crud.get_by_name(self.db, name)
+
     async def get_active(self) -> list[Camera]:
         """Get all active cameras."""
         return await camera_crud.get_active(self.db)

@@ -26,6 +26,11 @@ class CRUDCamera(CRUDBase[Camera, CameraCreate, CameraUpdate]):
         result = await db.execute(select(Camera).where(Camera.safe_name == safe_name))
         return result.scalar_one_or_none()
 
+    async def get_by_name(self, db: AsyncSession, name: str) -> Camera | None:
+        """Get a camera by its display name."""
+        result = await db.execute(select(Camera).where(Camera.name == name))
+        return result.scalar_one_or_none()
+
     async def get_active(self, db: AsyncSession) -> list[Camera]:
         """Get all active cameras."""
         result = await db.execute(select(Camera).where(Camera.is_active == True).order_by(Camera.name))  # noqa: E712
