@@ -1,5 +1,8 @@
 # LuxUPT
 
+> **🚧 WORK IN PROGRESS: Home Assistant Add-on Conversion**  
+> We have restructured this repository to function as a **Home Assistant Custom Add-on Repository**. You can now add this repository's URL directly to your Home Assistant Add-on Store to install LuxUPT as a native HA Add-on! Please note that this integration is currently a work in progress, and some features, configurations, or documentation may still be in development.
+
 **Automatic timelapse videos from your UniFi Protect cameras.**
 
 ![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)
