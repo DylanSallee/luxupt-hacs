@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Source bashio library
-source /usr/lib/bashio/bashio
+# Setup and source bashio library
+export __BASHIO_LIB_DIR=/usr/lib/bashio
+source /usr/lib/bashio/bashio.sh
 
 bashio::log.info "Starting LuxUPT Add-on..."
 
