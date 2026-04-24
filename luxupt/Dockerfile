@@ -45,17 +45,42 @@ ENV PYTHONUNBUFFERED=1 \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     ca-certificates \
+    curl \
+    jq \
+    tzdata \
     && rm -rf /var/lib/apt/lists/*
+
+# Install bashio
+RUN curl -J -L -o /tmp/bashio.tar.gz \
+    "https://github.com/hassio-addons/bashio/archive/v0.16.2.tar.gz" \
+    && tar zxvf /tmp/bashio.tar.gz -C /tmp \
+    && mv /tmp/bashio-*/lib /usr/lib/bashio \
+    && ln -s /usr/lib/bashio/bashio /usr/bin/bashio \
+    && rm -rf /tmp/bashio*
 
 # Create non-root user
 RUN groupadd -g 1000 appuser && \
     useradd -u 1000 -g appuser -s /bin/bash appuser
 
 # Add build arguments AFTER static layers (these change each build)
-ARG VERSION="1.1.0"
-ARG BUILD_DATE="1970-01-01T00:00:00Z"
-ENV LUXUPT_VERSION=$VERSION \
-    LUXUPT_BUILD_DATE=$BUILD_DATE
+ARG BUILD_ARCH
+ARG BUILD_DATE
+ARG BUILD_DESCRIPTION
+ARG BUILD_NAME
+ARG BUILD_REF
+ARG BUILD_REPOSITORY
+ARG BUILD_VERSION
+
+# Required HA labels
+LABEL \
+    io.hass.name="${BUILD_NAME}" \
+    io.hass.description="${BUILD_DESCRIPTION}" \
+    io.hass.arch="${BUILD_ARCH}" \
+    io.hass.type="addon" \
+    io.hass.version=${BUILD_VERSION}
+
+ENV LUXUPT_VERSION=${BUILD_VERSION:-1.1.0} \
+    LUXUPT_BUILD_DATE=${BUILD_DATE:-1970-01-01T00:00:00Z}
 
 # Set working directory
 WORKDIR /app/luxupt
@@ -76,8 +101,9 @@ RUN chmod +x entrypoint.sh
 # Add virtual environment to PATH
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Switch to non-root user
-USER appuser
+# Copy and setup HA run script
+COPY run.sh /run.sh
+RUN chmod +x /run.sh
 
 # Health check - uses the /health/live endpoint for liveness
 # start-period allows time for database init and camera discovery
@@ -90,6 +116,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 # LOGGING_LEVEL: DEBUG, INFO, WARNING, ERROR (default INFO)
 ENV WEB_PORT=8080
 
-# Run via entrypoint script which builds uvicorn command from env vars
-# CLI commands available via: docker exec <container> python main.py <command>
-ENTRYPOINT ["./entrypoint.sh"]
+# Run via HA entrypoint script
+ENTRYPOINT ["/run.sh"]
