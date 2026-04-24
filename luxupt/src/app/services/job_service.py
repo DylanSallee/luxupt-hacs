@@ -9,7 +9,7 @@ from datetime import date, datetime
 
 import config
 from camera_manager import CameraManager, CameraManagerSettings
-from crud import job_crud, scheduler_settings_crud
+from crud import camera_crud, job_crud, scheduler_settings_crud
 from crud.fetch_settings_crud import fetch_settings_crud
 from db.connection import async_session
 from logging_config import get_logger
@@ -416,9 +416,22 @@ class JobProcessor:
 
         # Fire Home Assistant event
         if output_exists:
-            await self._fire_ha_event(camera, date_obj.strftime("%Y-%m-%d"), str(output_path), interval)
+            # Look up camera display name
+            camera_name = camera
+            async with async_session() as db:
+                camera_obj = await camera_crud.get_by_id(db, camera_id)
+                if camera_obj:
+                    camera_name = camera_obj.name
+            
+            await self._fire_ha_event(
+                camera=camera,
+                camera_name=camera_name,
+                date_str=date_obj.strftime("%Y-%m-%d"),
+                file_path=str(output_path),
+                interval=interval
+            )
 
-    async def _fire_ha_event(self, camera: str, date_str: str, file_path: str, interval: int) -> None:
+    async def _fire_ha_event(self, camera: str, camera_name: str, date_str: str, file_path: str, interval: int) -> None:
         """Fire an event in Home Assistant if running as an Add-on."""
         supervisor_token = os.environ.get("SUPERVISOR_TOKEN")
         if not supervisor_token:
@@ -432,7 +445,8 @@ class JobProcessor:
             "Content-Type": "application/json"
         }
         payload = {
-            "camera": camera,
+            "camera": camera_name,
+            "camera_safe_name": camera,
             "date": date_str,
             "file_path": file_path,
             "interval": interval
