@@ -1,5 +1,5 @@
 name: "LuxUPT"
-version: "1.1.8"
+version: "1.1.9"
 slug: "luxupt"
 description: "Time-lapse videos from UniFi Protect cameras"
 url: "https://github.com/DylanSallee/luxupt-hacs"
@@ -10,6 +10,7 @@ arch:
 init: false
 startup: application
 hassio_api: true
+hassio_role: manager
 
 ingress: true
 ingress_port: 8080
