@@ -419,7 +419,7 @@ class JobProcessor:
             # Look up camera display name
             camera_name = camera
             async with async_session() as db:
-                camera_obj = await camera_crud.get_by_id(db, camera_id)
+                camera_obj = await camera_crud.get_by_camera_id(db, camera_id)
                 if camera_obj:
                     camera_name = camera_obj.name
             
