@@ -751,6 +751,12 @@ class TimelapseService:
         # Estimate video duration for better progress tracking
         estimated_video_seconds = total_frames / encoding_settings.frame_rate
 
+        # Use a local temporary file to prevent network share I/O errors during finalization (+faststart shifting)
+        import uuid
+        temp_dir = Path(f"/tmp/luxupt_encodes/{job_key}")
+        temp_dir.mkdir(parents=True, exist_ok=True)
+        temp_output = temp_dir / output_path.name
+
         # Build FFmpeg command with progress output - all settings from database
         input_pattern = str(images_path / f"{camera_name}_*.{image_format}")
 
@@ -786,7 +792,7 @@ class TimelapseService:
             "bt709",
             "-colorspace",
             "bt709",
-            str(output_path),
+            str(temp_output),
         ]
 
         logger.info(
@@ -847,6 +853,8 @@ class TimelapseService:
                 if stderr_task is not None:
                     stderr_task.cancel()
                 await self._clear_process_pid(job_key)  # Clear PID on timeout
+                import shutil
+                await asyncio.to_thread(shutil.rmtree, temp_dir, ignore_errors=True)
                 error_msg = f"FFmpeg timed out after {encoding_settings.ffmpeg_timeout}s"
                 await self._update_progress(job_key, -1, error_msg)  # -1 indicates failure
                 return False
@@ -862,9 +870,24 @@ class TimelapseService:
             duration_seconds = end_time - start_time
 
             if returncode == 0:
-                # Verify output file
-                exists, file_size = await async_fs.file_exists_and_size(str(output_path))
+                # Verify temp output file
+                exists, file_size = await async_fs.file_exists_and_size(str(temp_output))
                 if exists:
+                    # Move to final destination
+                    import shutil
+                    try:
+                        await asyncio.to_thread(shutil.move, str(temp_output), str(output_path))
+                    except Exception as e:
+                        error_msg = f"Failed to move video to final destination: {str(e)}"
+                        await self._update_progress(job_key, -1, error_msg)
+                        logger.error(error_msg)
+                        await async_fs.path_unlink(temp_output, missing_ok=True)
+                        import shutil
+                        await asyncio.to_thread(shutil.rmtree, temp_dir, ignore_errors=True)
+                        await self._clear_process_pid(job_key)
+                        self._job_key_to_id.pop(job_key, None)
+                        return False
+
                     formatted_size = self._format_file_size(file_size)
 
                     # Success!
@@ -879,13 +902,18 @@ class TimelapseService:
                             "file_size": formatted_size,
                         },
                     )
+                    import shutil
+                    await asyncio.to_thread(shutil.rmtree, temp_dir, ignore_errors=True)
                     await self._clear_process_pid(job_key)  # Clear PID on success
                     self._job_key_to_id.pop(job_key, None)  # Cleanup mapping
                     return True
                 else:
                     error_msg = "Output file not created or empty"
                     await self._update_progress(job_key, -1, error_msg)  # -1 indicates failure
-                    await async_fs.path_unlink(output_path, missing_ok=True)  # Remove partial file
+                    await async_fs.path_unlink(temp_output, missing_ok=True)  # Remove partial file
+                    await async_fs.path_unlink(output_path, missing_ok=True)
+                    import shutil
+                    await asyncio.to_thread(shutil.rmtree, temp_dir, ignore_errors=True)
                     await self._clear_process_pid(job_key)  # Clear PID on failure
                     self._job_key_to_id.pop(job_key, None)  # Cleanup mapping
                     return False
@@ -918,7 +946,10 @@ class TimelapseService:
                         "error": error_msg,
                     },
                 )
-                await async_fs.path_unlink(output_path, missing_ok=True)  # Remove partial file
+                await async_fs.path_unlink(temp_output, missing_ok=True)  # Remove partial file
+                await async_fs.path_unlink(output_path, missing_ok=True)
+                import shutil
+                await asyncio.to_thread(shutil.rmtree, temp_dir, ignore_errors=True)
                 await self._clear_process_pid(job_key)  # Clear PID on FFmpeg error
                 self._job_key_to_id.pop(job_key, None)  # Cleanup mapping
                 return False
@@ -930,7 +961,10 @@ class TimelapseService:
                 "Error creating video",
                 extra={"camera": camera_name, "interval": interval, "error": str(e)},
             )
-            await async_fs.path_unlink(output_path, missing_ok=True)  # Remove partial file
+            await async_fs.path_unlink(temp_output, missing_ok=True)  # Remove partial file
+            await async_fs.path_unlink(output_path, missing_ok=True)
+            import shutil
+            await asyncio.to_thread(shutil.rmtree, temp_dir, ignore_errors=True)
             await self._clear_process_pid(job_key)  # Clear PID on exception
             self._job_key_to_id.pop(job_key, None)  # Cleanup mapping
             return False
