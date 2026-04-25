@@ -1,5 +1,5 @@
 name: "LuxUPT"
-version: "1.2.4"
+version: "1.2.5"
 slug: "luxupt"
 description: "Time-lapse videos from UniFi Protect cameras"
 url: "https://github.com/DylanSallee/luxupt-hacs"

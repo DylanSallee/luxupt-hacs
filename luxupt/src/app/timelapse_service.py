@@ -908,7 +908,7 @@ class TimelapseService:
                             "Check container/host memory limits."
                         )
                     else:
-                        error_msg = filtered_stderr[:500]
+                        error_msg = filtered_stderr[-1000:]
                 await self._update_progress(job_key, -1, error_msg)  # -1 indicates failure
                 logger.error(
                     "FFmpeg failed",
