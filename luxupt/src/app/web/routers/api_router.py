@@ -20,6 +20,7 @@ class CreateTimelapseRequest(BaseModel):
     camera: str = Field(..., description="Camera ID or safe name")
     date: str = Field(..., description="Target date in YYYY-MM-DD format")
     interval: int = Field(..., description="Interval in seconds (e.g., 60 for 1 frame per minute)", ge=1)
+    keep_images: bool | None = Field(None, description="Whether to keep the source images after creation. Defaults to the scheduler settings if not specified.")
 
 
 class CreateTimelapseResponse(BaseModel):
@@ -71,11 +72,18 @@ async def api_create_timelapse(
             camera_id=camera_id,
             date_str=request.date,
             interval=request.interval,
+            keep_images=request.keep_images if request.keep_images is not None else True,
         )
         await db.commit()
 
         # Start processing the job in background
-        get_job_processor().start_job(job.job_id, request.date, camera_safe_name, request.interval)
+        get_job_processor().start_job(
+            job.job_id, 
+            request.date, 
+            camera_safe_name, 
+            request.interval, 
+            keep_images=request.keep_images
+        )
 
         return CreateTimelapseResponse(
             success=True,

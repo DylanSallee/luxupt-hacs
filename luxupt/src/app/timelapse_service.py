@@ -900,7 +900,15 @@ class TimelapseService:
                         "Check container/host memory limits."
                     )
                 else:
-                    error_msg = stderr[:500]
+                    # Filter out harmless swscaler warnings so they don't mask the real error (like OOM kills)
+                    filtered_stderr = "\n".join([line for line in stderr.splitlines() if "deprecated pixel format" not in line and line.strip()])
+                    if not filtered_stderr:
+                        error_msg = (
+                            "FFmpeg process killed (no error output) — likely out of memory. "
+                            "Check container/host memory limits."
+                        )
+                    else:
+                        error_msg = filtered_stderr[:500]
                 await self._update_progress(job_key, -1, error_msg)  # -1 indicates failure
                 logger.error(
                     "FFmpeg failed",

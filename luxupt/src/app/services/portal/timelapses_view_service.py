@@ -220,6 +220,7 @@ class TimelapsesViewService:
         camera_id: str,
         date_str: str,
         interval: int,
+        keep_images: bool = True,
     ) -> Job:
         """Create a new timelapse job."""
         target_date = date.fromisoformat(date_str)
@@ -229,6 +230,7 @@ class TimelapsesViewService:
             camera_id=camera_id,
             target_date=target_date,
             interval=interval,
+            keep_images=keep_images,
         )
 
     async def get_browser_context(
