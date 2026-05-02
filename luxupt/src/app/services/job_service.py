@@ -303,6 +303,9 @@ class JobProcessor:
                 elif keep_images and not scheduler_settings.keep_images:
                     await self.update_job_progress(job_id, 5, "running", "Keeping images for this job (job override)")
 
+                # Generate a timestamp for the job to allow unique filenames
+                timestamp_str = datetime.now().strftime("%H%M%S")
+
                 # Initialize camera manager with settings from database
                 cm_settings = await self._load_camera_manager_settings()
                 timelapse_service.camera_manager = CameraManager(cm_settings)
@@ -318,10 +321,11 @@ class JobProcessor:
                         keep_images=keep_images,
                         encoding_settings=encoding_settings,
                         recreate_existing=scheduler_settings.recreate_existing,
+                        timestamp_str=timestamp_str,
                     )
 
                     if success:
-                        await self._finalize_successful_job(job_id, camera, date_obj, interval)
+                        await self._finalize_successful_job(job_id, camera, date_obj, interval, timestamp_str)
                     else:
                         async with async_session() as db:
                             await job_crud.fail_job(db, job_id, error="Timelapse creation failed")
@@ -344,12 +348,18 @@ class JobProcessor:
                         extra={"job_id": job_id, "error": str(db_err)},
                     )
 
-    async def _finalize_successful_job(self, job_id: str, camera: str, date_obj: datetime, interval: int) -> None:
+    async def _finalize_successful_job(
+        self, job_id: str, camera: str, date_obj: datetime, interval: int, timestamp_str: str | None = None
+    ) -> None:
         """Finalize a successful job - probe metadata, generate thumbnail, save to DB."""
         year = date_obj.strftime("%Y")
         month = date_obj.strftime("%m")
 
-        output_filename = f"{camera}_{year}{month}{date_obj.strftime('%d')}_{interval}s.mp4"
+        if timestamp_str:
+            output_filename = f"{camera}_{year}{month}{date_obj.strftime('%d')}_{interval}s_{timestamp_str}.mp4"
+        else:
+            output_filename = f"{camera}_{year}{month}{date_obj.strftime('%d')}_{interval}s.mp4"
+            
         output_path = config.VIDEO_OUTPUT_PATH / year / month / camera / f"{interval}s" / output_filename
 
         # Single async check for existence + size (one thread dispatch instead of 5+ blocking calls)

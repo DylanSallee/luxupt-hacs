@@ -590,6 +590,7 @@ class TimelapseService:
         encoding_settings: EncodingSettings,
         job_id: str | None = None,
         recreate_existing: bool = False,
+        timestamp_str: str | None = None,
     ) -> bool | str | None:
         """Create a time-lapse video for a specific camera and interval.
 
@@ -637,35 +638,40 @@ class TimelapseService:
         # Create output directory
         await async_fs.path_mkdir(videos_path, parents=True, exist_ok=True)
 
-        # Define output file
-        output_filename = f"{camera_name}_{year}{month}{day}_{interval}s.mp4"
+        # Define output file with optional timestamp to allow multiple versions per day
+        if timestamp_str:
+            output_filename = f"{camera_name}_{year}{month}{day}_{interval}s_{timestamp_str}.mp4"
+        else:
+            output_filename = f"{camera_name}_{year}{month}{day}_{interval}s.mp4"
+            
         output_path = videos_path / output_filename
 
-        # Check if a completed timelapse record exists in the database
-        async with async_session() as db:
-            existing = await timelapse_crud.get_by_camera_date_interval(
-                db,
-                camera=camera_name,
-                timelapse_date=target_date.date(),
-                interval=interval,
-            )
-            if existing and existing.status == "completed":
-                if recreate_existing:
-                    # Delete existing timelapse record and file
-                    logger.debug(
-                        "Recreating existing timelapse",
-                        extra={"camera": camera_name, "interval": interval, "timelapse_id": existing.id},
-                    )
-                    await timelapse_crud.delete(db, id=existing.id)
-                    await db.commit()
-                    # Also delete the file if it exists
-                    await async_fs.path_unlink(output_path, missing_ok=True)
-                else:
-                    logger.debug(
-                        "Timelapse already exists in database, skipping",
-                        extra={"camera": camera_name, "interval": interval},
-                    )
-                    return "exists"  # Distinct from None (no images) and True (created)
+        # Check if a completed timelapse record exists in the database (only for non-timestamped files)
+        if not timestamp_str:
+            async with async_session() as db:
+                existing = await timelapse_crud.get_by_camera_date_interval(
+                    db,
+                    camera=camera_name,
+                    timelapse_date=target_date.date(),
+                    interval=interval,
+                )
+                if existing and existing.status == "completed":
+                    if recreate_existing:
+                        # Delete existing timelapse record and file
+                        logger.debug(
+                            "Recreating existing timelapse",
+                            extra={"camera": camera_name, "interval": interval, "timelapse_id": existing.id},
+                        )
+                        await timelapse_crud.delete(db, id=existing.id)
+                        await db.commit()
+                        # Also delete the file if it exists
+                        await async_fs.path_unlink(output_path, missing_ok=True)
+                    else:
+                        logger.debug(
+                            "Timelapse already exists in database, skipping",
+                            extra={"camera": camera_name, "interval": interval},
+                        )
+                        return "exists"  # Distinct from None (no images) and True (created)
 
         # Also check if file exists but no DB record (legacy/orphaned files)
         if await async_fs.path_exists(output_path):
